@@ -1,98 +1,95 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  useColorScheme,
+  Platform,
+  TouchableOpacity,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+const LIGHT = {
+  bg: '#F7F7F5',
+  text: '#111110',
+  muted: '#999994',
+  border: '#E4E4E0',
+  btnBg: '#111110',
+  btnText: '#F7F7F5',
+};
+
+const DARK = {
+  bg: '#0F1117',
+  text: '#EEF0F5',
+  muted: '#5C6378',
+  border: '#252A38',
+  btnBg: '#EEF0F5',
+  btnText: '#0F1117',
+};
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const system = useColorScheme();
+  const [override, setOverride] = useState<'light' | 'dark' | null>(null);
+  const scheme = override ?? system ?? 'light';
+  const t = scheme === 'dark' ? DARK : LIGHT;
+  const insets = useSafeAreaInsets();
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  const toggle = () => setOverride(scheme === 'dark' ? 'light' : 'dark');
+
+  return (
+      <View style={[styles.root, { backgroundColor: t.bg, paddingTop: insets.top + 48 }]}>
+
+        <Text style={[styles.label, { color: t.muted }]}>HOME</Text>
+
+        <Text style={[styles.title, { color: t.text }]}>Welcome.</Text>
+
+        <View style={[styles.divider, { backgroundColor: t.border }]} />
+
+        <TouchableOpacity
+            onPress={toggle}
+            activeOpacity={0.8}
+            style={[styles.btn, { backgroundColor: t.btnBg }]}
+        >
+          <Text style={[styles.btnText, { color: t.btnText }]}>
+            {scheme === 'dark' ? '☀️  Light mode' : '🌙  Dark mode'}
+          </Text>
+        </TouchableOpacity>
+
+      </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  root: {
+    flex: 1,
+    paddingHorizontal: 28,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  label: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 2,
+    marginBottom: 10,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  title: {
+    fontSize: 48,
+    fontWeight: '700',
+    letterSpacing: -1,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'Georgia' }),
+    marginBottom: 24,
+  },
+  divider: {
+    height: 1,
+    marginBottom: 24,
+  },
+  btn: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  btnText: {
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
 });
