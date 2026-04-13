@@ -1,26 +1,27 @@
-import { StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import AuthButton from "@/components/ui/AuthButton";
-import AuthInput from "@/components/ui/AuthInput";
-import ErrorMessage from "@/components/ui/ErrorMessage";
+import AuthInput from "./AuthInput";
+import AuthButton from "./AuthButton";
+import ErrorMessage from "./ErrorMessage";
+import { useAuth } from "@/contexts/AuthContext";
 
-type LoggedOutViewProps = {
-    email: string;
-    password: string;
-    errorMessage: string;
-    setEmail: (value: string) => void;
-    setPassword: (value: string) => void;
-    onLogin: () => void;
-};
+export default function LoggedOutView() {
+    const { login } = useAuth();
 
-export default function LoggedOutView({
-                                          email,
-                                          password,
-                                          errorMessage,
-                                          setEmail,
-                                          setPassword,
-                                          onLogin,
-                                      }: LoggedOutViewProps) {
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
+
+    const handleLogin = async () => {
+        try {
+            await login(email, password);
+            setErrorMessage("");
+        } catch (error: any) {
+            setErrorMessage(error.message ?? "Prijava nije uspjela.");
+        }
+    };
+
     return (
         <View style={styles.screen}>
             <View style={styles.card}>
@@ -28,23 +29,21 @@ export default function LoggedOutView({
                 <Text style={styles.title}>Prijava</Text>
 
                 <AuthInput
-                    placeholder="Unesite email adresu"
+                    placeholder="Email"
                     value={email}
                     onChangeText={setEmail}
-                    autoCapitalize="none"
                     keyboardType="email-address"
                 />
 
                 <AuthInput
-                    placeholder="Unesite lozinku"
+                    placeholder="Lozinka"
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry
                 />
 
                 <ErrorMessage message={errorMessage} />
-
-                <AuthButton title="Prijava" onPress={onLogin} />
+                <AuthButton title="Prijava" onPress={handleLogin} />
             </View>
         </View>
     );
