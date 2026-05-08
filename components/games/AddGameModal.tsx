@@ -5,9 +5,11 @@ type AddGameModalProps = {
     title: string;
     description: string;
     imageUrl: string;
+    route: string;
     onChangeTitle: (value: string) => void;
     onChangeDescription: (value: string) => void;
     onChangeImageUrl: (value: string) => void;
+    onChangeRoute: (value: string) => void;
     onClose: () => void;
     onSubmit: () => void;
 };
@@ -17,9 +19,11 @@ export default function AddGameModal({
                                          title,
                                          description,
                                          imageUrl,
+                                         route,
                                          onChangeTitle,
                                          onChangeDescription,
                                          onChangeImageUrl,
+                                         onChangeRoute,
                                          onClose,
                                          onSubmit,
                                      }: AddGameModalProps) {
@@ -48,6 +52,14 @@ export default function AddGameModal({
                         placeholder="URL slike"
                         value={imageUrl}
                         onChangeText={onChangeImageUrl}
+                        style={styles.input}
+                        autoCapitalize="none"
+                    />
+
+                    <TextInput
+                        placeholder="Route igre, npr. /game-one"
+                        value={route}
+                        onChangeText={onChangeRoute}
                         style={styles.input}
                         autoCapitalize="none"
                     />
