@@ -38,7 +38,7 @@ export default function LoggedInView() {
                 if (docSnap.exists()) {
                     setProfile(docSnap.data() as Profile);
                 } else {
-                    await setDoc(doc(firestore, "users", user.uid), emptyProfile);
+                    await setDoc(doc(firestore, "users", user.uid), profile, { merge: true });
                     setProfile(emptyProfile);
                 }
             } catch (error: any) {

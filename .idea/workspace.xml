@@ -3,14 +3,13 @@
   <component name="ChangeListManager">
     <list default="true" id="ea230f5e-a387-4591-bd43-aebedf0f8db6" name="Changes" comment="8.5.2026">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(drawer)/(tabs)/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/_layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(drawer)/(tabs)/auth.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/auth.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(drawer)/(tabs)/explore.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/explore.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(drawer)/(tabs)/games.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/games.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(drawer)/(tabs)/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app.json" beforeDir="false" afterPath="$PROJECT_DIR$/app.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(tabs)/explore.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/explore.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/_layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/components/games/AddGameModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/games/AddGameModal.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/types/game.ts" beforeDir="false" afterPath="$PROJECT_DIR$/types/game.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/game-one.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/game-one.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/auth/LoggedInView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/auth/LoggedInView.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -93,6 +92,8 @@
       <workItem from="1776671506071" duration="2835000" />
       <workItem from="1777366343210" duration="65000" />
       <workItem from="1778226358376" duration="3178000" />
+      <workItem from="1778229677462" duration="103000" />
+      <workItem from="1778487460167" duration="2958000" />
     </task>
     <task id="LOCAL-00001" summary="23">
       <option name="closed" value="true" />
@@ -142,7 +143,15 @@
       <option name="project" value="LOCAL" />
       <updated>1778226435169</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="8.5.2026">
+      <option name="closed" value="true" />
+      <created>1778229711562</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1778229711562</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
