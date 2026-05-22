@@ -14,6 +14,7 @@ import GameCard from "@/components/games/GameCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { firestore } from "@/firebase";
 import type { Game } from "@/types/game";
+import { pickAndUploadGameImage } from "@/services/uploadGameImage";
 
 export default function GamesScreen() {
     const { isLoggedIn } = useAuth();
@@ -25,6 +26,7 @@ export default function GamesScreen() {
     const [gameDescription, setGameDescription] = useState("");
     const [gameImageUrl, setGameImageUrl] = useState("");
     const [gameRoute, setGameRoute] = useState("");
+    const [uploadingImage, setUploadingImage] = useState(false);
 
     useEffect(() => {
         const fetchGames = async () => {
@@ -84,6 +86,22 @@ export default function GamesScreen() {
         }
     };
 
+    const handlePickImage = async () => {
+        try {
+            setUploadingImage(true);
+            const publicUrl = await pickAndUploadGameImage();
+
+            if (publicUrl) {
+                setGameImageUrl(publicUrl);
+                Alert.alert("Uspjeh", "Slika je uploadana.");
+            }
+        } catch (error: any) {
+            Alert.alert("Greška", error.message ?? "Upload slike nije uspio.");
+        } finally {
+            setUploadingImage(false);
+        }
+    };
+
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Games</Text>
@@ -113,17 +131,17 @@ export default function GamesScreen() {
                 description={gameDescription}
                 imageUrl={gameImageUrl}
                 route={gameRoute}
+                uploadingImage={uploadingImage}
                 onChangeTitle={setGameTitle}
                 onChangeDescription={setGameDescription}
-                onChangeImageUrl={setGameImageUrl}
                 onChangeRoute={setGameRoute}
+                onPickImage={handlePickImage}
                 onClose={() => setModalVisible(false)}
                 onSubmit={handleAddGame}
             />
         </View>
     );
 }
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,

@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import { Dimensions, StyleSheet, Text, TouchableOpacity, View, ScrollView } from "react-native";
+import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAuth } from "@/contexts/AuthContext";
-import { updateUserScore } from "@/services/scoreService";
+import { fetchLeaderboard, updateUserScore } from "@/services/scoreService";
+import type { LeaderboardUser } from "@/types/leaderboard";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
-const CELL = 20;
-const COLS = Math.floor(Math.min(SCREEN_WIDTH - 32, 560) / CELL);
-const ROWS = 22;
+const SCREEN_HEIGHT = Dimensions.get("window").height;
+const CELL = 18;
+const COLS = Math.floor(Math.min(SCREEN_WIDTH - 32, 500) / CELL);
 const GRID_W = COLS * CELL;
-const GRID_H = ROWS * CELL;
+const GRID_H = Math.floor((SCREEN_HEIGHT * 0.45) / CELL) * CELL;
+const ROWS = GRID_H / CELL;
 
 type Point = { x: number; y: number };
 type Dir = "UP" | "DOWN" | "LEFT" | "RIGHT";
@@ -20,8 +22,10 @@ const randFood = (snake: Point[]): Point => {
     return p;
 };
 
+const MEDALS = ["🥇", "🥈", "🥉"];
+
 const DPadButton = ({ label, onPress }: { label: string; onPress: () => void }) => (
-    <TouchableOpacity style={dpadStyles.btn} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity style={dpadStyles.btn} onPress={onPress} activeOpacity={0.6}>
         <Text style={dpadStyles.arrow}>{label}</Text>
     </TouchableOpacity>
 );
@@ -35,8 +39,7 @@ export default function Games2Screen() {
     const [highScore, setHighScore] = useState(0);
     const [phase, setPhase] = useState<"idle" | "playing" | "over">("idle");
     const [speed, setSpeed] = useState(140);
-    const [message, setMessage] = useState("");
-    const [scoreSubmitted, setScoreSubmitted] = useState(false);
+    const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
 
     const dirRef = useRef<Dir>("RIGHT");
     const nextDirRef = useRef<Dir>("RIGHT");
@@ -62,6 +65,13 @@ export default function Games2Screen() {
         return () => window.removeEventListener("keydown", handleKey);
     }, []);
 
+    const loadLeaderboard = async () => {
+        try {
+            const data = await fetchLeaderboard();
+            setLeaderboard(data.slice(0, 3));
+        } catch {}
+    };
+
     const startGame = () => {
         const s = [{ x: 5, y: 10 }];
         const f = { x: 15, y: 10 };
@@ -74,8 +84,6 @@ export default function Games2Screen() {
         setFood(f);
         setScore(0);
         setSpeed(140);
-        setMessage("");
-        setScoreSubmitted(false);
         setPhase("playing");
     };
 
@@ -84,18 +92,16 @@ export default function Games2Screen() {
         if (opp[d] !== dirRef.current) nextDirRef.current = d;
     };
 
-    const submitScore = async (finalScore: number) => {
-        if (!isLoggedIn || !user || scoreSubmitted) {
-            if (!isLoggedIn) setMessage("Prijavi se za spremanje bodova!");
-            return;
+    const handleGameOver = async (finalScore: number) => {
+        setHighScore(prev => Math.max(prev, finalScore));
+        await loadLeaderboard();
+        if (isLoggedIn && user && finalScore > 0) {
+            try {
+                await updateUserScore(user, true);
+                await loadLeaderboard();
+            } catch {}
         }
-        try {
-            const points = await updateUserScore(user, finalScore > 0);
-            setScoreSubmitted(true);
-            setMessage(`Bodovi spremljeni! +${points}`);
-        } catch {
-            setMessage("Greška pri spremanju bodova.");
-        }
+        setPhase("over");
     };
 
     useEffect(() => {
@@ -116,12 +122,10 @@ export default function Games2Screen() {
             };
             const nh = moves[d];
 
-            if (nh.x < 0 || nh.x >= COLS || nh.y < 0 || nh.y >= ROWS || s.some(p => p.x === nh.x && p.y === nh.y)) {
+            if (nh.x < 0 || nh.x >= COLS || nh.y < 0 || nh.y >= ROWS ||
+                s.some(p => p.x === nh.x && p.y === nh.y)) {
                 clearInterval(loop.current);
-                const finalScore = scoreRef.current;
-                setHighScore(prev => Math.max(prev, finalScore));
-                setPhase("over");
-                submitScore(finalScore);
+                handleGameOver(scoreRef.current);
                 return;
             }
 
@@ -146,187 +150,171 @@ export default function Games2Screen() {
         return () => clearInterval(loop.current);
     }, [phase, speed]);
 
-    const getSegmentStyle = (i: number, total: number) => {
+    const getSegmentColor = (i: number, total: number) => {
         const ratio = i / total;
-        const green = Math.floor(255 - ratio * 120);
-        return {
-            backgroundColor: i === 0 ? "#00ff88" : `rgb(0, ${green}, ${Math.floor(green * 0.5)})`,
-            borderRadius: i === 0 ? 8 : 5,
-            opacity: i === 0 ? 1 : Math.max(0.4, 1 - ratio * 0.5),
-        };
+        const g = Math.floor(255 - ratio * 130);
+        return i === 0 ? "#00ff88" : `rgb(0,${g},${Math.floor(g * 0.4)})`;
     };
 
     return (
-        <ScrollView contentContainerStyle={styles.scroll}>
-            <View style={styles.container}>
-
-                {/* Header */}
-                <View style={styles.header}>
-                    <View style={styles.scoreBox}>
-                        <Text style={styles.scoreLabel}>SCORE</Text>
-                        <Text style={styles.scoreValue}>{score}</Text>
-                    </View>
-                    <Text style={styles.titleEmoji}>🐍</Text>
-                    <View style={styles.scoreBox}>
-                        <Text style={styles.scoreLabel}>BEST</Text>
-                        <Text style={styles.scoreValue}>{highScore}</Text>
-                    </View>
+        <View style={styles.container}>
+            {/* Header */}
+            <View style={[styles.header, { width: GRID_W }]}>
+                <View style={styles.scoreBox}>
+                    <Text style={styles.scoreLabel}>SCORE</Text>
+                    <Text style={styles.scoreValue}>{score}</Text>
                 </View>
-
-                {/* Grid */}
-                <View style={styles.gridWrapper}>
-                    <View style={{ width: GRID_W, height: GRID_H, position: "relative", borderRadius: 12, overflow: "hidden", backgroundColor: "#080f0f" }}>
-
-                        {/* Grid dots */}
-                        {Array.from({ length: ROWS }).map((_, row) =>
-                            Array.from({ length: COLS }).map((_, col) => (
-                                <View key={`${row}-${col}`} style={{
-                                    position: "absolute",
-                                    left: col * CELL + CELL / 2 - 1,
-                                    top: row * CELL + CELL / 2 - 1,
-                                    width: 2, height: 2,
-                                    borderRadius: 1,
-                                    backgroundColor: "rgba(0,255,136,0.06)",
-                                }} />
-                            ))
-                        )}
-
-                        {/* Food */}
-                        <View style={[styles.foodGlow, { left: food.x * CELL - 6, top: food.y * CELL - 6, width: CELL + 12, height: CELL + 12 }]} />
-                        <View style={[styles.food, { left: food.x * CELL + 3, top: food.y * CELL + 3, width: CELL - 6, height: CELL - 6 }]}>
-                            <Text style={{ fontSize: CELL - 8, lineHeight: CELL - 6 }}>🍎</Text>
-                        </View>
-
-                        {/* Snake */}
-                        {snake.map((s, i) => (
-                            <View key={i} style={[
-                                styles.segment,
-                                getSegmentStyle(i, snake.length),
-                                { left: s.x * CELL + 2, top: s.y * CELL + 2, width: CELL - 4, height: CELL - 4 }
-                            ]}>
-                                {i === 0 && (
-                                    <>
-                                        <View style={styles.eyeLeft} />
-                                        <View style={styles.eyeRight} />
-                                    </>
-                                )}
-                            </View>
-                        ))}
-
-                        {/* Overlay */}
-                        {phase !== "playing" && (
-                            <View style={styles.overlay}>
-                                {phase === "idle" ? (
-                                    <>
-                                        <Text style={{ fontSize: 56 }}>🐍</Text>
-                                        <Text style={styles.overlayTitle}>SNAKE</Text>
-                                        <Text style={styles.overlayHint}>Strelice / WASD za upravljanje</Text>
-                                        <TouchableOpacity style={styles.btn} onPress={startGame}>
-                                            <Text style={styles.btnText}>▶  ZAPOČNI</Text>
-                                        </TouchableOpacity>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Text style={{ fontSize: 52 }}>💀</Text>
-                                        <Text style={styles.overlayTitle}>GAME OVER</Text>
-                                        <Text style={styles.overlayScore}>{score} bodova</Text>
-                                        {score > 0 && score >= highScore && (
-                                            <Text style={styles.newRecord}>🏆 Novi rekord!</Text>
-                                        )}
-                                        {message ? <Text style={styles.msgText}>{message}</Text> : null}
-                                        <TouchableOpacity style={styles.btn} onPress={startGame}>
-                                            <Text style={styles.btnText}>↺  IGRAJ PONOVO</Text>
-                                        </TouchableOpacity>
-                                    </>
-                                )}
-                            </View>
-                        )}
-                    </View>
+                <Text style={styles.titleEmoji}>🐍</Text>
+                <View style={styles.scoreBox}>
+                    <Text style={styles.scoreLabel}>BEST</Text>
+                    <Text style={styles.scoreValue}>{highScore}</Text>
                 </View>
-
-                {/* D-Pad */}
-                <View style={dpadStyles.wrapper}>
-                    <View style={dpadStyles.row}>
-                        <View style={dpadStyles.spacer} />
-                        <DPadButton label="▲" onPress={() => changeDir("UP")} />
-                        <View style={dpadStyles.spacer} />
-                    </View>
-                    <View style={dpadStyles.row}>
-                        <DPadButton label="◀" onPress={() => changeDir("LEFT")} />
-                        <View style={dpadStyles.center}>
-                            <Text style={dpadStyles.centerDot}>●</Text>
-                        </View>
-                        <DPadButton label="▶" onPress={() => changeDir("RIGHT")} />
-                    </View>
-                    <View style={dpadStyles.row}>
-                        <View style={dpadStyles.spacer} />
-                        <DPadButton label="▼" onPress={() => changeDir("DOWN")} />
-                        <View style={dpadStyles.spacer} />
-                    </View>
-                </View>
-
-                <Text style={styles.hint}>⌨️ Strelice ili WASD na tipkovnici</Text>
             </View>
-        </ScrollView>
+
+            {/* Grid */}
+            <View style={styles.gridWrapper}>
+                <View style={{ width: GRID_W, height: GRID_H, position: "relative", backgroundColor: "#080f0f", borderRadius: 10, overflow: "hidden" }}>
+                    {/* Dot grid */}
+                    {Array.from({ length: ROWS }).map((_, r) =>
+                        Array.from({ length: COLS }).map((_, c) => (
+                            <View key={`${r}-${c}`} style={{
+                                position: "absolute",
+                                left: c * CELL + CELL / 2 - 1,
+                                top: r * CELL + CELL / 2 - 1,
+                                width: 2, height: 2, borderRadius: 1,
+                                backgroundColor: "rgba(0,255,136,0.05)",
+                            }} />
+                        ))
+                    )}
+
+                    {/* Food */}
+                    <View style={[styles.foodGlow, { left: food.x * CELL - 5, top: food.y * CELL - 5, width: CELL + 10, height: CELL + 10 }]} />
+                    <View style={[styles.food, { left: food.x * CELL + 1, top: food.y * CELL + 1, width: CELL - 2, height: CELL - 2 }]}>
+                        <Text style={{ fontSize: CELL - 6 }}>🍎</Text>
+                    </View>
+
+                    {/* Snake */}
+                    {snake.map((s, i) => (
+                        <View key={i} style={{
+                            position: "absolute",
+                            left: s.x * CELL + 2, top: s.y * CELL + 2,
+                            width: CELL - 4, height: CELL - 4,
+                            backgroundColor: getSegmentColor(i, snake.length),
+                            borderRadius: i === 0 ? 7 : 4,
+                            opacity: Math.max(0.4, 1 - (i / snake.length) * 0.5),
+                        }}>
+                            {i === 0 && (
+                                <>
+                                    <View style={styles.eyeL} />
+                                    <View style={styles.eyeR} />
+                                </>
+                            )}
+                        </View>
+                    ))}
+
+                    {/* Overlay */}
+                    {phase !== "playing" && (
+                        <View style={styles.overlay}>
+                            {phase === "idle" ? (
+                                <>
+                                    <Text style={{ fontSize: 44 }}>🐍</Text>
+                                    <Text style={styles.overlayTitle}>SNAKE</Text>
+                                    <Text style={styles.overlayHint}>Strelice / WASD</Text>
+                                    <TouchableOpacity style={styles.btn} onPress={startGame}>
+                                        <Text style={styles.btnText}>▶  ZAPOČNI</Text>
+                                    </TouchableOpacity>
+                                </>
+                            ) : (
+                                <View style={styles.gameOverContent}>
+                                    <Text style={{ fontSize: 40 }}>💀</Text>
+                                    <Text style={styles.overlayTitle}>GAME OVER</Text>
+                                    <Text style={styles.overlayScore}>{score} bodova</Text>
+                                    {score > 0 && score >= highScore && (
+                                        <Text style={styles.newRecord}>🏆 Novi rekord!</Text>
+                                    )}
+
+                                    {/* Leaderboard */}
+                                    {leaderboard.length > 0 && (
+                                        <View style={styles.lbBox}>
+                                            <Text style={styles.lbTitle}>TOP 3</Text>
+                                            {leaderboard.map((u, i) => (
+                                                <View key={u.id} style={styles.lbRow}>
+                                                    <Text style={styles.lbMedal}>{MEDALS[i]}</Text>
+                                                    <Text style={styles.lbName} numberOfLines={1}>
+                                                        {u.username.split("@")[0]}
+                                                    </Text>
+                                                    <Text style={styles.lbScore}>{u.score}</Text>
+                                                </View>
+                                            ))}
+                                        </View>
+                                    )}
+
+                                    <TouchableOpacity style={styles.btn} onPress={startGame}>
+                                        <Text style={styles.btnText}>↺  IGRAJ PONOVO</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                        </View>
+                    )}
+                </View>
+            </View>
+
+            {/* D-Pad */}
+            <View style={dpadStyles.wrapper}>
+                <View style={dpadStyles.row}>
+                    <View style={dpadStyles.empty} />
+                    <DPadButton label="▲" onPress={() => changeDir("UP")} />
+                    <View style={dpadStyles.empty} />
+                </View>
+                <View style={dpadStyles.row}>
+                    <DPadButton label="◀" onPress={() => changeDir("LEFT")} />
+                    <View style={dpadStyles.center}><Text style={dpadStyles.dot}>●</Text></View>
+                    <DPadButton label="▶" onPress={() => changeDir("RIGHT")} />
+                </View>
+                <View style={dpadStyles.row}>
+                    <View style={dpadStyles.empty} />
+                    <DPadButton label="▼" onPress={() => changeDir("DOWN")} />
+                    <View style={dpadStyles.empty} />
+                </View>
+            </View>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
-    scroll: { flexGrow: 1, backgroundColor: "#070d0d" },
-    container: { flex: 1, backgroundColor: "#070d0d", alignItems: "center", paddingTop: 16, paddingBottom: 24 },
-    header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: GRID_W, marginBottom: 14 },
-    scoreBox: {
-        alignItems: "center", backgroundColor: "#0d1a1a",
-        paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12,
-        borderWidth: 1, borderColor: "#0a3a2a", minWidth: 85,
-    },
-    scoreLabel: { fontSize: 10, color: "#2a6a4a", fontWeight: "bold", letterSpacing: 2 },
-    scoreValue: { fontSize: 24, color: "#00ff88", fontWeight: "bold" },
-    titleEmoji: { fontSize: 40 },
-    gridWrapper: {
-        borderRadius: 14, borderWidth: 2, borderColor: "#0a3a2a",
-        shadowColor: "#00ff88", shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.4, shadowRadius: 24, elevation: 12,
-    },
-    segment: { position: "absolute" },
-    eyeLeft: { position: "absolute", width: 4, height: 4, borderRadius: 2, backgroundColor: "#000", top: 3, left: 3 },
-    eyeRight: { position: "absolute", width: 4, height: 4, borderRadius: 2, backgroundColor: "#000", top: 3, right: 3 },
+    container: { flex: 1, backgroundColor: "#070d0d", alignItems: "center", paddingTop: 12 },
+    header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 },
+    scoreBox: { alignItems: "center", backgroundColor: "#0d1a1a", paddingHorizontal: 14, paddingVertical: 6, borderRadius: 10, borderWidth: 1, borderColor: "#0a3a2a", minWidth: 80 },
+    scoreLabel: { fontSize: 9, color: "#2a6a4a", fontWeight: "bold", letterSpacing: 2 },
+    scoreValue: { fontSize: 22, color: "#00ff88", fontWeight: "bold" },
+    titleEmoji: { fontSize: 32 },
+    gridWrapper: { borderRadius: 12, borderWidth: 2, borderColor: "#0a3a2a", shadowColor: "#00ff88", shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.35, shadowRadius: 20, elevation: 10 },
+    eyeL: { position: "absolute", width: 3, height: 3, borderRadius: 2, backgroundColor: "#000", top: 2, left: 2 },
+    eyeR: { position: "absolute", width: 3, height: 3, borderRadius: 2, backgroundColor: "#000", top: 2, right: 2 },
     foodGlow: { position: "absolute", backgroundColor: "rgba(255,60,60,0.15)", borderRadius: 50 },
     food: { position: "absolute", justifyContent: "center", alignItems: "center" },
-    overlay: {
-        ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.9)",
-        justifyContent: "center", alignItems: "center", gap: 14, borderRadius: 12,
-    },
-    overlayTitle: { fontSize: 38, fontWeight: "bold", color: "#00ff88", letterSpacing: 5 },
-    overlayHint: { fontSize: 13, color: "#2a6a4a", textAlign: "center" },
-    overlayScore: { fontSize: 26, color: "#ffffff", fontWeight: "bold" },
-    newRecord: { fontSize: 18, color: "#fbbf24", fontWeight: "bold" },
-    msgText: { fontSize: 14, color: "#00ff88", textAlign: "center", paddingHorizontal: 20 },
-    btn: {
-        backgroundColor: "#00ff88", paddingHorizontal: 40, paddingVertical: 14,
-        borderRadius: 14, marginTop: 8,
-    },
-    btnText: { color: "#070d0d", fontSize: 16, fontWeight: "bold", letterSpacing: 2 },
-    hint: { marginTop: 14, fontSize: 12, color: "#1a4a2a" },
+    overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.92)", justifyContent: "center", alignItems: "center", borderRadius: 10 },
+    gameOverContent: { alignItems: "center", gap: 8, width: "90%" },
+    overlayTitle: { fontSize: 32, fontWeight: "bold", color: "#00ff88", letterSpacing: 4 },
+    overlayHint: { fontSize: 12, color: "#2a6a4a" },
+    overlayScore: { fontSize: 22, color: "#fff", fontWeight: "bold" },
+    newRecord: { fontSize: 16, color: "#fbbf24", fontWeight: "bold" },
+    lbBox: { width: "100%", backgroundColor: "#0d1a1a", borderRadius: 12, padding: 12, borderWidth: 1, borderColor: "#0a3a2a", marginVertical: 4 },
+    lbTitle: { fontSize: 11, color: "#2a6a4a", fontWeight: "bold", letterSpacing: 3, textAlign: "center", marginBottom: 8 },
+    lbRow: { flexDirection: "row", alignItems: "center", paddingVertical: 4 },
+    lbMedal: { fontSize: 18, width: 28 },
+    lbName: { flex: 1, color: "#ccffdd", fontSize: 13 },
+    lbScore: { color: "#00ff88", fontWeight: "bold", fontSize: 14 },
+    btn: { backgroundColor: "#00ff88", paddingHorizontal: 32, paddingVertical: 12, borderRadius: 12, marginTop: 4 },
+    btnText: { color: "#070d0d", fontSize: 14, fontWeight: "bold", letterSpacing: 2 },
 });
 
 const dpadStyles = StyleSheet.create({
-    wrapper: { marginTop: 24, alignItems: "center", gap: 0 },
-    row: { flexDirection: "row", alignItems: "center" },
-    spacer: { width: 70 },
-    btn: {
-        width: 70, height: 70,
-        backgroundColor: "#0d1a1a",
-        borderWidth: 1, borderColor: "#0a3a2a",
-        justifyContent: "center", alignItems: "center",
-        borderRadius: 8,
-    },
-    arrow: { fontSize: 28, color: "#00ff88" },
-    center: {
-        width: 70, height: 70,
-        backgroundColor: "#0a1414",
-        borderWidth: 1, borderColor: "#0a3a2a",
-        justifyContent: "center", alignItems: "center",
-    },
-    centerDot: { color: "#0a3a2a", fontSize: 20 },
+    wrapper: { marginTop: 16, alignItems: "center" },
+    row: { flexDirection: "row" },
+    empty: { width: 56, height: 56 },
+    btn: { width: 56, height: 56, backgroundColor: "#0d1a1a", borderWidth: 1, borderColor: "#0a3a2a", justifyContent: "center", alignItems: "center", borderRadius: 6 },
+    arrow: { fontSize: 22, color: "#00ff88" },
+    center: { width: 56, height: 56, backgroundColor: "#080f0f", borderWidth: 1, borderColor: "#0a3a2a", justifyContent: "center", alignItems: "center" },
+    dot: { color: "#0a3a2a", fontSize: 16 },
 });

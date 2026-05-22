@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="ea230f5e-a387-4591-bd43-aebedf0f8db6" name="Changes" comment="8.5.2026">
+    <list default="true" id="ea230f5e-a387-4591-bd43-aebedf0f8db6" name="Changes" comment="11.5.2026">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app.json" beforeDir="false" afterPath="$PROJECT_DIR$/app.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(tabs)/explore.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/explore.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/_layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/game-one.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/game-one.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/components/auth/LoggedInView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/auth/LoggedInView.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(tabs)/games.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/games.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/games2.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/games2.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/games/AddGameModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/games/AddGameModal.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
     </list>
@@ -93,7 +91,9 @@
       <workItem from="1777366343210" duration="65000" />
       <workItem from="1778226358376" duration="3178000" />
       <workItem from="1778229677462" duration="103000" />
-      <workItem from="1778487460167" duration="2958000" />
+      <workItem from="1778487460167" duration="3021000" />
+      <workItem from="1778507531331" duration="297000" />
+      <workItem from="1779441719807" duration="2667000" />
     </task>
     <task id="LOCAL-00001" summary="23">
       <option name="closed" value="true" />
@@ -151,7 +151,15 @@
       <option name="project" value="LOCAL" />
       <updated>1778229711562</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="11.5.2026">
+      <option name="closed" value="true" />
+      <created>1778490563022</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1778490563022</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -163,7 +171,8 @@
     <MESSAGE value="30.3.2026." />
     <MESSAGE value="13.4.2026." />
     <MESSAGE value="8.5.2026" />
-    <option name="LAST_COMMIT_MESSAGE" value="8.5.2026" />
+    <MESSAGE value="11.5.2026" />
+    <option name="LAST_COMMIT_MESSAGE" value="11.5.2026" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
